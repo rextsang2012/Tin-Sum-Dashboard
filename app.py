@@ -4,6 +4,7 @@ import plotly.express as px
 import requests
 import pytz
 from datetime import datetime
+import streamlit.components.v1 as components
 
 # ==========================================
 # 1. 網頁基本設定 & CSS 美化 (包含字型大小控制)
@@ -104,7 +105,7 @@ calc_lifetime_mwh = (raw_lifetime_wh / 1_000_000) / 100
 lifetime_energy = f"{calc_lifetime_mwh:,.2f} MWh"
 
 # 3. 依需求計算二氧化碳 (使用原本未除以 100 的 kWh 數值 * 0.39)，並設定顯示小數點後 1 位
-calc_co2 = (raw_lifetime_wh / 100000) * 0.39
+calc_co2 = (raw_lifetime_wh / 1000) * 0.39
 co2_saved = f"{calc_co2:,.1f}"
 
 # ==========================================
@@ -121,7 +122,7 @@ col_left, col_right = st.columns([2, 1])
 # 左側區塊
 with col_left:
     with st.container(border=True):
-        st.markdown("** 效能 **")
+        st.markdown("**| 效能 (來自真實 API)**")
         m1, m2, m3, m4 = st.columns(4)
         m1.metric("⚡ 電流 (目前功率)", current_power)
         m2.metric("📅 今日發電量", today_energy)
@@ -161,3 +162,18 @@ with col_right:
 hkt = pytz.timezone('Asia/Hong_Kong')
 update_time = datetime.now(hkt).strftime("%Y/%m/%d %p %I:%M:%S")
 st.markdown(f"<p style='color: #888888; font-size: 0.8em;'>🕒 儀表板最後更新: {update_time}</p>", unsafe_allow_html=True)
+
+# ==========================================
+# 4. 網頁全自動重新整理機制 (每 5 分鐘)
+# ==========================================
+# 300000 毫秒 = 5 分鐘。時間一到，網頁會自動觸發 F5 重新整理，獲取最新快取資料
+components.html(
+    """
+    <script>
+    setTimeout(function(){
+        window.parent.location.reload();
+    }, 300000);
+    </script>
+    """,
+    height=0
+)
