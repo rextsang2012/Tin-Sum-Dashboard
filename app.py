@@ -122,7 +122,7 @@ col_left, col_right = st.columns([2, 1])
 # 左側區塊
 with col_left:
     with st.container(border=True):
-        st.markdown("**| 效能 (來自真實 API)**")
+        st.markdown("** 效能 **")
         m1, m2, m3, m4 = st.columns(4)
         m1.metric("⚡ 電流 (目前功率)", current_power)
         m2.metric("📅 今日發電量", today_energy)
