@@ -105,7 +105,7 @@ co2_saved = f"{calc_co2:,.1f}"
 # ==========================================
 st.markdown(f'''
     <div class="main-header">
-        <h2>田心救護站 <span style="margin: 0 10px;">|</span> <span>即時系統資訊</span></h2>
+        <h2>田心救護站 <span style="margin: 0 10px;">|</span> <span>太陽能發電系統</span></h2>
     </div>
 ''', unsafe_allow_html=True)
 
