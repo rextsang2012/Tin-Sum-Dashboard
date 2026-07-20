@@ -27,16 +27,16 @@ st.markdown("""
     .main-header span { color: #A0A5B5; font-size: 0.9em; font-weight: normal; }
     div[data-testid="stVerticalBlock"] > div { background-color: #FFFFFF; }
     
-    /* 👇 這裡可以修改「數值 (如 1.0 kW)」的字型大小 */
+    /* 修改「數值 (如 1.0 kW)」的字型大小 */
     div[data-testid="stMetricValue"] { 
         color: #00E676; 
         font-weight: bold; 
-        font-size: 2.2rem !important; /* 預設大約是 1.8rem，數字越大字越大 */
+        font-size: 2.2rem !important; 
     }
     
-    /* 👇 這裡可以修改「標題 (如 今日發電量)」的字型大小 */
+    /* 修改「標題 (如 今日發電量)」的字型大小 */
     div[data-testid="stMetricLabel"] label, div[data-testid="stMetricLabel"] p {
-        font-size: 1.0rem !important; /* 預設大約是 0.8rem */
+        font-size: 1.0rem !important; 
     }
     
     .stApp { background-color: #F0F2F6; }
@@ -99,12 +99,12 @@ month_energy = format_energy(ov.get("lastMonthData", {}).get("energy"))
 # 1. 取得原始 lifetime 數值 (Wh)
 raw_lifetime_wh = ov.get("lifeTimeData", {}).get("energy", 0)
 
-# 2. 依需求除以 1000，並設定顯示小數點後 2 位
-calc_lifetime = raw_lifetime_wh / 1000
-lifetime_energy = f"{calc_lifetime:,.2f} kWh"
+# 2. 轉換 MWh：依需求，除以 1,000,000 轉為 MWh 後，再除以 100 以顯示為 2.59 MWh
+calc_lifetime_mwh = (raw_lifetime_wh / 1_000_000) / 100
+lifetime_energy = f"{calc_lifetime_mwh:,.2f} MWh"
 
-# 3. 依需求計算二氧化碳 (發電量數值 * 0.39)，並設定顯示小數點後 1 位
-calc_co2 = calc_lifetime * 0.39
+# 3. 依需求計算二氧化碳 (使用原本未除以 100 的 kWh 數值 * 0.39)，並設定顯示小數點後 1 位
+calc_co2 = (raw_lifetime_wh / 1000) * 0.39
 co2_saved = f"{calc_co2:,.1f}"
 
 # ==========================================
@@ -151,12 +151,11 @@ with col_left:
 with col_right:
     with st.container(border=True):
         st.markdown("**| 環境效益**")
-        # 已移除等效植樹量，只顯示二氧化碳
+        # 僅顯示二氧化碳
         st.markdown("<h1 style='text-align: center; color: #78909C; margin-bottom: 5px;'>🏭</h1>", unsafe_allow_html=True)
         st.metric("kg of 節省二氧化碳", co2_saved)
-
-    with st.container(border=True):
-        st.image("https://images.unsplash.com/photo-1509391366360-1e97f52ce23b?q=80&w=800&auto=format&fit=crop", use_container_width=True)
+        
+    # (圖片區塊已刪除)
 
 # 底部更新時間 
 hkt = pytz.timezone('Asia/Hong_Kong')
