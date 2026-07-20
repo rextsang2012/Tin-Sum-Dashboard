@@ -105,7 +105,7 @@ calc_lifetime_mwh = (raw_lifetime_wh / 1_000_000) / 100
 lifetime_energy = f"{calc_lifetime_mwh:,.2f} MWh"
 
 # 3. 依需求計算二氧化碳 (使用原本未除以 100 的 kWh 數值 * 0.39)，並設定顯示小數點後 1 位
-calc_co2 = (raw_lifetime_wh / 1000) * 0.39
+calc_co2 = (raw_lifetime_wh / 100000) * 0.39
 co2_saved = f"{calc_co2:,.1f}"
 
 # ==========================================
