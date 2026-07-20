@@ -97,7 +97,7 @@ calc_lifetime_mwh = (raw_lifetime_wh / 1_000_000) / 100
 lifetime_energy = f"{calc_lifetime_mwh:,.2f} MWh"
 
 # 計算二氧化碳
-calc_co2 = (raw_lifetime_wh / 1000) * 0.39
+calc_co2 = (raw_lifetime_wh / 100000) * 0.39
 co2_saved = f"{calc_co2:,.1f}"
 
 # ==========================================
@@ -137,7 +137,7 @@ with col_left:
             fig.update_yaxes(showgrid=True, gridcolor='#E0E0E0', gridwidth=1)
             st.plotly_chart(fig, use_container_width=True)
         else:
-            st.info("今日尚無發電數據，或太陽下山變流器已休眠。")
+            st.info("今日尚無發電數據，或太陽下山逆變器已休眠。")
 
 with col_right:
     with st.container(border=True):
