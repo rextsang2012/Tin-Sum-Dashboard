@@ -6,7 +6,7 @@ import pytz
 from datetime import datetime
 
 # ==========================================
-# 1. 網頁基本設定 & CSS 美化
+# 1. 網頁基本設定 & CSS 美化 (包含字型大小控制)
 # ==========================================
 st.set_page_config(page_title="SolarEdge Dashboard", layout="wide")
 
@@ -26,7 +26,19 @@ st.markdown("""
     .main-header h2 { margin: 0; font-weight: 600; font-size: 1.8rem; }
     .main-header span { color: #A0A5B5; font-size: 0.9em; font-weight: normal; }
     div[data-testid="stVerticalBlock"] > div { background-color: #FFFFFF; }
-    div[data-testid="stMetricValue"] { color: #00E676; font-weight: bold; }
+    
+    /* 👇 這裡可以修改「數值 (如 1.0 kW)」的字型大小 */
+    div[data-testid="stMetricValue"] { 
+        color: #00E676; 
+        font-weight: bold; 
+        font-size: 2.2rem !important; /* 預設大約是 1.8rem，數字越大字越大 */
+    }
+    
+    /* 👇 這裡可以修改「標題 (如 今日發電量)」的字型大小 */
+    div[data-testid="stMetricLabel"] label, div[data-testid="stMetricLabel"] p {
+        font-size: 1.0rem !important; /* 預設大約是 0.8rem */
+    }
+    
     .stApp { background-color: #F0F2F6; }
     </style>
 """, unsafe_allow_html=True)
@@ -49,19 +61,14 @@ def format_energy(wh):
 # 抓取資料 (加入 @st.cache_data 避免每次重整網頁都頻繁消耗 API 額度)
 @st.cache_data(ttl=300) # 5分鐘更新一次
 def fetch_solaredge_data():
-    data = {"overview": {}, "envBenefits": {}, "power_df": pd.DataFrame()}
+    data = {"overview": {}, "power_df": pd.DataFrame()}
     try:
         # 抓取總覽數據 (發電量)
         res_ov = requests.get(f"{BASE_URL}/overview?api_key={API_KEY}")
         if res_ov.status_code == 200:
             data["overview"] = res_ov.json().get("overview", {})
 
-        # 抓取環境效益
-        res_env = requests.get(f"{BASE_URL}/envBenefits?systemUnits=Metric&api_key={API_KEY}")
-        if res_env.status_code == 200:
-            data["envBenefits"] = res_env.json().get("envBenefits", {})
-
-        # 抓取今日功率曲線 (確保使用底線 Asia/Hong_Kong)
+        # 抓取今日功率曲線
         hkt = pytz.timezone('Asia/Hong_Kong')
         today_str = datetime.now(hkt).strftime("%Y-%m-%d")
         res_pwr = requests.get(f"{BASE_URL}/power?startTime={today_str}%2000:00:00&endTime={today_str}%2023:59:59&api_key={API_KEY}")
@@ -79,18 +86,26 @@ def fetch_solaredge_data():
 # 取得資料
 api_data = fetch_solaredge_data()
 ov = api_data["overview"]
-env = api_data["envBenefits"]
 df_chart = api_data["power_df"]
 
 # 解析數值
 current_power = format_power(ov.get("currentPower", {}).get("power"))
 today_energy = format_energy(ov.get("lastDayData", {}).get("energy"))
 month_energy = format_energy(ov.get("lastMonthData", {}).get("energy"))
-lifetime_energy = format_energy(ov.get("lifeTimeData", {}).get("energy"))
 
-# 環境數值
-co2_saved = f"{env.get('gasEmissionSaved', {}).get('co2', 0):.1f}"
-trees_planted = str(env.get('treesPlanted', 0))
+# ==========================================
+# ⚡ 自訂計算：整個使用期發電量 & 二氧化碳
+# ==========================================
+# 1. 取得原始 lifetime 數值 (Wh)
+raw_lifetime_wh = ov.get("lifeTimeData", {}).get("energy", 0)
+
+# 2. 依需求除以 1000，並設定顯示小數點後 2 位
+calc_lifetime = raw_lifetime_wh / 1000
+lifetime_energy = f"{calc_lifetime:,.2f} kWh"
+
+# 3. 依需求計算二氧化碳 (發電量數值 * 0.39)，並設定顯示小數點後 1 位
+calc_co2 = calc_lifetime * 0.39
+co2_saved = f"{calc_co2:,.1f}"
 
 # ==========================================
 # 3. 網頁介面排版與繪製
@@ -106,7 +121,7 @@ col_left, col_right = st.columns([2, 1])
 # 左側區塊
 with col_left:
     with st.container(border=True):
-        st.markdown("**| 效能 **")
+        st.markdown("**| 效能 (來自真實 API)**")
         m1, m2, m3, m4 = st.columns(4)
         m1.metric("⚡ 電流 (目前功率)", current_power)
         m2.metric("📅 今日發電量", today_energy)
@@ -136,18 +151,14 @@ with col_left:
 with col_right:
     with st.container(border=True):
         st.markdown("**| 環境效益**")
-        env1, env2 = st.columns(2)
-        env1.markdown("<h1 style='text-align: center; color: #78909C;'>🏭</h1>", unsafe_allow_html=True)
-        env1.metric("kg of 節省二氧化碳", co2_saved)
-
-        env2.markdown("<h1 style='text-align: center; color: #78909C;'>🌲</h1>", unsafe_allow_html=True)
-        env2.metric("等效植樹量", trees_planted)
+        # 已移除等效植樹量，只顯示二氧化碳
+        st.markdown("<h1 style='text-align: center; color: #78909C; margin-bottom: 5px;'>🏭</h1>", unsafe_allow_html=True)
+        st.metric("kg of 節省二氧化碳", co2_saved)
 
     with st.container(border=True):
-        # 修正了 warning: 改用 use_container_width=True
         st.image("https://images.unsplash.com/photo-1509391366360-1e97f52ce23b?q=80&w=800&auto=format&fit=crop", use_container_width=True)
 
-# 底部更新時間 (確保使用底線 Asia/Hong_Kong)
+# 底部更新時間 
 hkt = pytz.timezone('Asia/Hong_Kong')
 update_time = datetime.now(hkt).strftime("%Y/%m/%d %p %I:%M:%S")
 st.markdown(f"<p style='color: #888888; font-size: 0.8em;'>🕒 儀表板最後更新: {update_time}</p>", unsafe_allow_html=True)
