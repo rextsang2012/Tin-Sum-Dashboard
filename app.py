@@ -171,7 +171,7 @@ with col_right:
     with st.container(border=True):
         st.markdown("**| 環境效益**")
         st.markdown("<h1 style='text-align: center; color: #78909C; margin-bottom: 5px; margin-top: 10px;'>🏭</h1>", unsafe_allow_html=True)
-        st.metric("kg of 節省二氧化碳", co2_saved)
+        st.metric("節省二氧化碳-kg", co2_saved)
         st.markdown("<br>", unsafe_allow_html=True)
 
 # 底部更新時間
