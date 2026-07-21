@@ -145,7 +145,7 @@ with col_left:
         m1.metric("⚡ 電流 (目前功率)", current_power)
         m2.metric("📅 今日發電量", today_energy)
         m3.metric("🗓️ 本月發電量", month_energy)
-        m4.metric("♾️ 整個使用期發電量", lifetime_energy)
+        m4.metric("♾️ 總發電量", lifetime_energy)
 
     with st.container(border=True):
         st.markdown("**| 功率和電量**")
