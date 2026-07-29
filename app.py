@@ -56,7 +56,7 @@ st.markdown("""
     
     /* 🔴 [字體放大] 數據的標題大小 (例如 "今日發電量" 這行字) */
     [data-testid="stMetricLabel"] p {
-        font-size: 2.2rem !important; 
+        font-size: 4rem !important; 
         color: #555555 !important;
         font-weight: bold !important;
         white-space: nowrap !important;
