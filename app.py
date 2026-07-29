@@ -7,18 +7,21 @@ from datetime import datetime
 import streamlit.components.v1 as components
 
 # ==========================================
-# 1. 網頁基本設定 & 電視全螢幕最佳化 CSS (放大字體與間距)
+# 1. 網頁基本設定 & CSS 樣式 (已加入明確修改標註)
 # ==========================================
 st.set_page_config(page_title="SolarEdge Dashboard", layout="wide", initial_sidebar_state="collapsed")
 
 st.markdown("""
     <style>
-    /* 隱藏預設選單、頂部裝飾條與底部浮水印 */
+    /* 隱藏預設選單、頂部裝飾條 */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
     
-    /* 調整頁面四周的留白，讓畫面有呼吸空間但不會太多 */
+    /* 隱藏滑鼠游標 (適用於 Wayland Kiosk 模式) */
+    * { cursor: none !important; }
+    
+    /* 調整頁面四周留白 */
     .block-container {
         padding-top: 2rem !important;
         padding-bottom: 2rem !important;
@@ -27,44 +30,46 @@ st.markdown("""
         max-width: 100% !important;
     }
 
-    /* 頂部深藍色標題列最佳化：放大標題字體以適應電視 */
+    /* --- 頂部深藍色標題列 --- */
     .main-header {
         background-color: #1e213a;
         color: white;
-        padding: 20px;
+        /* 🔴 [可自行調整] 標題列的上下內邊距 (空間) */
+        padding: 30px; 
         text-align: center;
         border-radius: 8px;
         margin-top: -30px; 
-        margin-bottom: 20px;
+        margin-bottom: 30px;
         font-family: sans-serif;
     }
-    .main-header h2 { margin: 0; font-weight: 600; font-size: 2.2rem; }
-    .main-header span { color: #A0A5B5; font-size: 1.2rem; font-weight: normal; }
+    /* 🔴 [可自行調整] 頂部主標題字體大小 (田心救護站) */
+    .main-header h2 { margin: 0; font-weight: 600; font-size: 3.5rem; }
+    
+    /* 🔴 [可自行調整] 頂部副標題字體大小 (太陽能發電系統) */
+    .main-header span { color: #A0A5B5; font-size: 2.5rem; font-weight: normal; }
     
     /* 卡片背景與邊框設定 */
     div[data-testid="stVerticalBlock"] > div { background-color: #FFFFFF; }
     .stApp { background-color: #F0F2F6; }
 
-    /* 【關鍵修改 1】：大幅放大數值 (Metric Value) 字體，適應遠距離觀看 */
+    /* --- 數據顯示區 (Metrics) --- */
+    /* 🔴 [可自行調整] 數據的數值大小 (例如 0.00 kW, 6.76 kWh 的數字) */
     div[data-testid="stMetricValue"] { 
-        font-size: 3.5rem !important; 
+        font-size: 5rem !important; /* 原本是 3.5rem，現在大幅放大 */
         color: #00E676; 
         font-weight: bold; 
         white-space: nowrap !important;
         overflow: visible !important;
-        padding-top: 10px;
-        padding-bottom: 10px;
+        padding-top: 15px;
+        padding-bottom: 15px;
     }
     
-    /* 【關鍵修改 2】：放大標題 (Metric Label) 字體 */
-    div[data-testid="stMetricLabel"] {
-        overflow: visible !important;
-        white-space: normal !important;
-    }
+    /* 🔴 [可自行調整] 數據的標題大小 (例如 "今日發電量" 這行字) */
     div[data-testid="stMetricLabel"] > div > p {
-        font-size: 1.2rem !important;
+        font-size: 1.8rem !important; /* 原本是 1.2rem，現在放大 */
         white-space: normal !important;
         text-overflow: clip !important;
+        color: #555555;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -129,7 +134,7 @@ co2_saved = f"{calc_co2:,.1f}"
 # ==========================================
 st.markdown(f'''
     <div class="main-header">
-        <h2>田心救護站 <span style="margin: 0 15px;">|</span> <span>太陽能發電系統</span></h2>
+        <h2>田心救護站 <span style="margin: 0 20px;">|</span> <span>太陽能發電系統</span></h2>
     </div>
 ''', unsafe_allow_html=True)
 
@@ -137,7 +142,8 @@ col_left, col_right = st.columns([2.5, 1])
 
 with col_left:
     with st.container(border=True):
-        st.markdown("<h3 style='margin-bottom: 0;'>| 效能</h3>", unsafe_allow_html=True)
+        # 🔴 [可自行調整] 區塊標題字體大小 (例如 "| 效能")
+        st.markdown("<h2 style='margin-bottom: 0; font-size: 2.2rem;'>| 效能</h2>", unsafe_allow_html=True)
         m1, m2, m3, m4 = st.columns(4)
         m1.metric("⚡ 電流 (目前功率)", current_power)
         m2.metric("📅 今日發電量", today_energy)
@@ -145,18 +151,24 @@ with col_left:
         m4.metric("♾️ 整個使用期發電量", lifetime_energy)
 
     with st.container(border=True):
-        st.markdown("<h3 style='margin-bottom: 0;'>| 功率和電量</h3>", unsafe_allow_html=True)
-        st.caption("今日功率 (kW)")
+        # 🔴 [可自行調整] 區塊標題字體大小 (例如 "| 功率和電量")
+        st.markdown("<h2 style='margin-bottom: 0; font-size: 2.2rem;'>| 功率和電量</h2>", unsafe_allow_html=True)
+        
+        # 🔴 [可自行調整] 圖表上方的附註字體大小 ("今日功率 (kW)")
+        st.markdown("<p style='color: #666; font-size: 1.5rem;'>今日功率 (kW)</p>", unsafe_allow_html=True)
+        
         if not df_chart.empty:
             fig = px.area(df_chart, x="date", y="value", color_discrete_sequence=['#00E676'])
             fig.update_layout(
-                margin=dict(l=10, r=10, t=20, b=10),
-                height=550, # 【關鍵修改 3】：將圖表高度從 180 大幅提升至 550，填滿下方空白
+                margin=dict(l=20, r=20, t=20, b=20),
+                # 🔴 [可自行調整] 圖表的整體高度 (原本是 550，現在拉高到 850 填滿下方空白)
+                height=850, 
                 xaxis_title=None,
                 yaxis_title=None,
                 plot_bgcolor='white',
                 paper_bgcolor='white',
-                font=dict(size=14) # 放大圖表軸線字體
+                # 🔴 [可自行調整] 圖表 X軸與Y軸的數字大小
+                font=dict(size=22) 
             )
             fig.update_xaxes(showgrid=False)
             fig.update_yaxes(showgrid=True, gridcolor='#E0E0E0', gridwidth=1)
@@ -166,16 +178,22 @@ with col_left:
 
 with col_right:
     with st.container(border=True):
-        st.markdown("<h3 style='margin-bottom: 0;'>| 環境效益</h3>", unsafe_allow_html=True)
-        st.markdown("<h1 style='text-align: center; color: #78909C; font-size: 6rem; margin-bottom: 20px; margin-top: 40px;'>🏭</h1>", unsafe_allow_html=True)
+        # 🔴 [可自行調整] 區塊標題字體大小 (例如 "| 環境效益")
+        st.markdown("<h2 style='margin-bottom: 0; font-size: 2.2rem;'>| 環境效益</h2>", unsafe_allow_html=True)
+        
+        # 🔴 [可自行調整] 工廠圖示的大小 (font-size: 12rem) 與上下空間 (margin-top/bottom)
+        st.markdown("<h1 style='text-align: center; color: #78909C; font-size: 12rem; margin-bottom: 40px; margin-top: 80px;'>🏭</h1>", unsafe_allow_html=True)
+        
         st.metric("kg of 節省二氧化碳", co2_saved)
-        # 增加一些空行讓右側卡片高度與左側大致對齊
-        st.markdown("<br><br><br><br><br><br><br><br>", unsafe_allow_html=True) 
+        
+        # 🔴 [可自行調整] 加入隱形換行符號以平衡左右兩側的卡片高度
+        st.markdown("<br><br><br><br><br><br><br><br><br><br><br><br><br>", unsafe_allow_html=True) 
 
 # 底部更新時間
 hkt = pytz.timezone('Asia/Hong_Kong')
 update_time = datetime.now(hkt).strftime("%Y/%m/%d %p %I:%M:%S")
-st.markdown(f"<p style='color: #888888; font-size: 1rem; text-align: right; margin-top: 10px;'>🕒 儀表板最後更新: {update_time}</p>", unsafe_allow_html=True)
+# 🔴 [可自行調整] 底部更新時間的字體大小 (font-size)
+st.markdown(f"<p style='color: #888888; font-size: 1.5rem; text-align: right; margin-top: 15px;'>🕒 儀表板最後更新: {update_time}</p>", unsafe_allow_html=True)
 
 # 自動重新整理腳本
 components.html(
