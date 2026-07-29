@@ -191,3 +191,19 @@ components.html(
     height=0,
     width=0,
 )
+
+
+import streamlit as st
+
+# 隱藏全域滑鼠游標的 CSS
+hide_cursor_style = """
+    <style>
+    /* 強制將所有元素的游標設為無 */
+    * {
+        cursor: none !important;
+    }
+    </style>
+"""
+
+# 注入 CSS
+st.markdown(hide_cursor_style, unsafe_allow_html=True)
