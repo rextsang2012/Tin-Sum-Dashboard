@@ -7,7 +7,7 @@ from datetime import datetime
 import streamlit.components.v1 as components
 
 # ==========================================
-# 1. 網頁基本設定 & 電視螢幕最佳化 CSS (極致壓縮垂直空間)
+# 1. 網頁基本設定 & 電視全螢幕最佳化 CSS (放大字體與間距)
 # ==========================================
 st.set_page_config(page_title="SolarEdge Dashboard", layout="wide", initial_sidebar_state="collapsed")
 
@@ -18,54 +18,51 @@ st.markdown("""
     footer {visibility: hidden;}
     header {visibility: hidden;}
     
-    /* 極致縮減頁面四周的留白 */
+    /* 調整頁面四周的留白，讓畫面有呼吸空間但不會太多 */
     .block-container {
-        padding-top: 1rem !important;
-        padding-bottom: 0rem !important;
-        padding-left: 2rem !important;
-        padding-right: 2rem !important;
+        padding-top: 2rem !important;
+        padding-bottom: 2rem !important;
+        padding-left: 3rem !important;
+        padding-right: 3rem !important;
         max-width: 100% !important;
     }
 
-    /* 頂部深藍色標題列最佳化：壓扁高度並縮減底部 margin */
+    /* 頂部深藍色標題列最佳化：放大標題字體以適應電視 */
     .main-header {
         background-color: #1e213a;
         color: white;
-        padding: 10px;
+        padding: 20px;
         text-align: center;
         border-radius: 8px;
-        margin-top: -40px; 
-        margin-bottom: 5px; /* 從 15px 縮減至 5px */
+        margin-top: -30px; 
+        margin-bottom: 20px;
         font-family: sans-serif;
     }
-    .main-header h2 { margin: 0; font-weight: 600; font-size: 1.6rem; }
-    .main-header span { color: #A0A5B5; font-size: 0.9em; font-weight: normal; }
+    .main-header h2 { margin: 0; font-weight: 600; font-size: 2.2rem; }
+    .main-header span { color: #A0A5B5; font-size: 1.2rem; font-weight: normal; }
     
-    /* 縮減所有垂直區塊之間的間距 (Gap) */
-    div[data-testid="stVerticalBlock"] {
-        gap: 0.5rem !important;
-    }
-
     /* 卡片背景與邊框設定 */
     div[data-testid="stVerticalBlock"] > div { background-color: #FFFFFF; }
     .stApp { background-color: #F0F2F6; }
 
-    /* 確保數值 (Metric Value) 不會換行且不會被切斷 */
+    /* 【關鍵修改 1】：大幅放大數值 (Metric Value) 字體，適應遠距離觀看 */
     div[data-testid="stMetricValue"] { 
-        font-size: 1.6rem !important; 
+        font-size: 3.5rem !important; 
         color: #00E676; 
         font-weight: bold; 
         white-space: nowrap !important;
         overflow: visible !important;
+        padding-top: 10px;
+        padding-bottom: 10px;
     }
     
-    /* 確保標題 (Metric Label) 正常顯示 */
+    /* 【關鍵修改 2】：放大標題 (Metric Label) 字體 */
     div[data-testid="stMetricLabel"] {
         overflow: visible !important;
         white-space: normal !important;
     }
     div[data-testid="stMetricLabel"] > div > p {
-        font-size: 0.85rem !important;
+        font-size: 1.2rem !important;
         white-space: normal !important;
         text-overflow: clip !important;
     }
@@ -109,7 +106,7 @@ def fetch_solaredge_data():
                 df['value'] = df['value'].fillna(0) / 1000 
                 data["power_df"] = df
     except Exception as e:
-        pass # 隱藏電視螢幕上的錯誤提示，保持畫面整潔
+        pass 
     return data
 
 api_data = fetch_solaredge_data()
@@ -132,54 +129,55 @@ co2_saved = f"{calc_co2:,.1f}"
 # ==========================================
 st.markdown(f'''
     <div class="main-header">
-        <h2>田心救護站 <span style="margin: 0 10px;">|</span> <span>太陽能發電系統</span></h2>
+        <h2>田心救護站 <span style="margin: 0 15px;">|</span> <span>太陽能發電系統</span></h2>
     </div>
 ''', unsafe_allow_html=True)
 
-col_left, col_right = st.columns([2.2, 1])
+col_left, col_right = st.columns([2.5, 1])
 
 with col_left:
     with st.container(border=True):
-        st.markdown("**| 效能**")
+        st.markdown("<h3 style='margin-bottom: 0;'>| 效能</h3>", unsafe_allow_html=True)
         m1, m2, m3, m4 = st.columns(4)
         m1.metric("⚡ 電流 (目前功率)", current_power)
         m2.metric("📅 今日發電量", today_energy)
         m3.metric("🗓️ 本月發電量", month_energy)
-        m4.metric("♾️ 總發電量", lifetime_energy)
+        m4.metric("♾️ 整個使用期發電量", lifetime_energy)
 
     with st.container(border=True):
-        st.markdown("**| 功率和電量**")
+        st.markdown("<h3 style='margin-bottom: 0;'>| 功率和電量</h3>", unsafe_allow_html=True)
         st.caption("今日功率 (kW)")
         if not df_chart.empty:
             fig = px.area(df_chart, x="date", y="value", color_discrete_sequence=['#00E676'])
             fig.update_layout(
-                margin=dict(l=0, r=0, t=10, b=0),
-                height=180, # 【關鍵修改】：將高度降至 180，確保電視絕對能顯示完整 X 軸
+                margin=dict(l=10, r=10, t=20, b=10),
+                height=550, # 【關鍵修改 3】：將圖表高度從 180 大幅提升至 550，填滿下方空白
                 xaxis_title=None,
                 yaxis_title=None,
                 plot_bgcolor='white',
-                paper_bgcolor='white'
+                paper_bgcolor='white',
+                font=dict(size=14) # 放大圖表軸線字體
             )
             fig.update_xaxes(showgrid=False)
             fig.update_yaxes(showgrid=True, gridcolor='#E0E0E0', gridwidth=1)
-            # 【關鍵修改】：隱藏 Plotly 的浮動工具列 (displayModeBar: False)
             st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
         else:
             st.info("今日尚無發電數據，或太陽下山變流器已休眠。")
 
 with col_right:
     with st.container(border=True):
-        st.markdown("**| 環境效益**")
-        st.markdown("<h1 style='text-align: center; color: #78909C; margin-bottom: 5px; margin-top: 10px;'>🏭</h1>", unsafe_allow_html=True)
-        st.metric("節省二氧化碳-kg", co2_saved)
-        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("<h3 style='margin-bottom: 0;'>| 環境效益</h3>", unsafe_allow_html=True)
+        st.markdown("<h1 style='text-align: center; color: #78909C; font-size: 6rem; margin-bottom: 20px; margin-top: 40px;'>🏭</h1>", unsafe_allow_html=True)
+        st.metric("kg of 節省二氧化碳", co2_saved)
+        # 增加一些空行讓右側卡片高度與左側大致對齊
+        st.markdown("<br><br><br><br><br><br><br><br>", unsafe_allow_html=True) 
 
 # 底部更新時間
 hkt = pytz.timezone('Asia/Hong_Kong')
 update_time = datetime.now(hkt).strftime("%Y/%m/%d %p %I:%M:%S")
-st.markdown(f"<p style='color: #888888; font-size: 0.8em; margin-top: -5px;'>🕒 儀表板最後更新: {update_time}</p>", unsafe_allow_html=True)
+st.markdown(f"<p style='color: #888888; font-size: 1rem; text-align: right; margin-top: 10px;'>🕒 儀表板最後更新: {update_time}</p>", unsafe_allow_html=True)
 
-# 自動重新整理腳本 (每 300,000 毫秒 = 5 分鐘)
+# 自動重新整理腳本
 components.html(
     """
     <script>
@@ -191,5 +189,3 @@ components.html(
     height=0,
     width=0,
 )
-
-
