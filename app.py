@@ -55,7 +55,7 @@ st.markdown("""
     /* --- 數據顯示區 (Metrics) --- */
     /* 🔴 [可自行調整] 數據的數值大小 (例如 0.00 kW, 6.76 kWh 的數字) */
     div[data-testid="stMetricValue"] { 
-        font-size: 5rem !important; /* 原本是 3.5rem，現在大幅放大 */
+        font-size: 8rem !important; /* 原本是 3.5rem，現在大幅放大 */
         color: #00E676; 
         font-weight: bold; 
         white-space: nowrap !important;
