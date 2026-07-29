@@ -43,10 +43,10 @@ st.markdown("""
         font-family: sans-serif;
     }
     /* 🔴 [可自行調整] 頂部主標題字體大小 (田心救護站) */
-    .main-header h2 { margin: 0; font-weight: 600; font-size: 10rem; }
+    .main-header h2 { margin: 0; font-weight: 600; font-size: 8rem; }
     
     /* 🔴 [可自行調整] 頂部副標題字體大小 (太陽能發電系統) */
-    .main-header span { color: #A0A5B5; font-size: 10rem; font-weight: normal; }
+    .main-header span { color: #A0A5B5; font-size: 8rem; font-weight: normal; }
     
     /* 卡片背景與邊框設定 */
     div[data-testid="stVerticalBlock"] > div { background-color: #FFFFFF; }
@@ -66,7 +66,7 @@ st.markdown("""
     
     /* 🔴 [可自行調整] 數據的標題大小 (例如 "今日發電量" 這行字) */
     div[data-testid="stMetricLabel"] > div > p {
-        font-size: 1.8rem !important; /* 原本是 1.2rem，現在放大 */
+        font-size: 2.5rem !important; /* 原本是 1.2rem，現在放大 */
         white-space: normal !important;
         text-overflow: clip !important;
         color: #555555;
