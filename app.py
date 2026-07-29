@@ -66,7 +66,7 @@ st.markdown("""
     
     /* 🔴 [可自行調整] 數據的標題大小 (例如 "今日發電量" 這行字) */
     div[data-testid="stMetricLabel"] > div > p {
-        font-size: 2.5rem !important; /* 原本是 1.2rem，現在放大 */
+        font-size: 6rem !important; /* 原本是 1.2rem，現在放大 */
         white-space: normal !important;
         text-overflow: clip !important;
         color: #555555;
@@ -143,7 +143,7 @@ col_left, col_right = st.columns([2.5, 1])
 with col_left:
     with st.container(border=True):
         # 🔴 [可自行調整] 區塊標題字體大小 (例如 "| 效能")
-        st.markdown("<h2 style='margin-bottom: 0; font-size: 2.2rem;'>| 效能</h2>", unsafe_allow_html=True)
+        st.markdown("<h2 style='margin-bottom: 0; font-size: 8rem;'>| 效能</h2>", unsafe_allow_html=True)
         m1, m2, m3, m4 = st.columns(4)
         m1.metric("⚡ 電流 (目前功率)", current_power)
         m2.metric("📅 今日發電量", today_energy)
@@ -152,10 +152,10 @@ with col_left:
 
     with st.container(border=True):
         # 🔴 [可自行調整] 區塊標題字體大小 (例如 "| 功率和電量")
-        st.markdown("<h2 style='margin-bottom: 0; font-size: 2.2rem;'>| 功率和電量</h2>", unsafe_allow_html=True)
+        st.markdown("<h2 style='margin-bottom: 0; font-size: 6rem;'>| 功率和電量</h2>", unsafe_allow_html=True)
         
         # 🔴 [可自行調整] 圖表上方的附註字體大小 ("今日功率 (kW)")
-        st.markdown("<p style='color: #666; font-size: 1.5rem;'>今日功率 (kW)</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #666; font-size: 6rem;'>今日功率 (kW)</p>", unsafe_allow_html=True)
         
         if not df_chart.empty:
             fig = px.area(df_chart, x="date", y="value", color_discrete_sequence=['#00E676'])
@@ -182,7 +182,7 @@ with col_right:
         st.markdown("<h2 style='margin-bottom: 0; font-size: 2.2rem;'>| 環境效益</h2>", unsafe_allow_html=True)
         
         # 🔴 [可自行調整] 工廠圖示的大小 (font-size: 12rem) 與上下空間 (margin-top/bottom)
-        st.markdown("<h1 style='text-align: center; color: #78909C; font-size: 12rem; margin-bottom: 40px; margin-top: 80px;'>🏭</h1>", unsafe_allow_html=True)
+        st.markdown("<h1 style='text-align: center; color: #78909C; font-size: 20rem; margin-bottom: 40px; margin-top: 80px;'>🏭</h1>", unsafe_allow_html=True)
         
         st.metric("kg of 節省二氧化碳", co2_saved)
         
