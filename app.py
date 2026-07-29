@@ -43,7 +43,7 @@ st.markdown("""
         font-family: sans-serif;
     }
     /* 🔴 [可自行調整] 頂部主標題字體大小 (田心救護站) */
-    .main-header h2 { margin: 0; font-weight: 600; font-size: 3.5rem; }
+    .main-header h2 { margin: 0; font-weight: 600; font-size: 5 rem; }
     
     /* 🔴 [可自行調整] 頂部副標題字體大小 (太陽能發電系統) */
     .main-header span { color: #A0A5B5; font-size: 2.5rem; font-weight: normal; }
