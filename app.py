@@ -66,7 +66,7 @@ st.markdown("""
     
     /* 🔴 [可自行調整] 數據的標題大小 (例如 "今日發電量" 這行字) */
     div[data-testid="stMetricLabel"] > div > p {
-        font-size: 10rem !important; /* 原本是 1.2rem，現在放大 */
+        font-size: 20rem !important; /* 原本是 1.2rem，現在放大 */
         white-space: normal !important;
         text-overflow: clip !important;
         color: #555555;
