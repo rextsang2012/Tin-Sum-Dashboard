@@ -143,7 +143,7 @@ col_left, col_right = st.columns([2.5, 1])
 with col_left:
     with st.container(border=True):
         # 🔴 [可自行調整] 區塊標題字體大小 (例如 "| 效能")
-        st.markdown("<h2 style='margin-bottom: 0; font-size: 8rem;'>| 效能</h2>", unsafe_allow_html=True)
+        st.markdown("<h2 style='margin-bottom: 0; font-size: 20rem;'>| 效能</h2>", unsafe_allow_html=True)
         m1, m2, m3, m4 = st.columns(4)
         m1.metric("⚡ 電流 (目前功率)", current_power)
         m2.metric("📅 今日發電量", today_energy)
