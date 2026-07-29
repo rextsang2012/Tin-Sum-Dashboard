@@ -43,10 +43,10 @@ st.markdown("""
         font-family: sans-serif;
     }
     /* 🔴 [可自行調整] 頂部主標題字體大小 (田心救護站) */
-    .main-header h2 { margin: 0; font-weight: 600; font-size: 5 rem; }
+    .main-header h2 { margin: 0; font-weight: 600; font-size: 10rem; }
     
     /* 🔴 [可自行調整] 頂部副標題字體大小 (太陽能發電系統) */
-    .main-header span { color: #A0A5B5; font-size: 2.5rem; font-weight: normal; }
+    .main-header span { color: #A0A5B5; font-size: 10rem; font-weight: normal; }
     
     /* 卡片背景與邊框設定 */
     div[data-testid="stVerticalBlock"] > div { background-color: #FFFFFF; }
