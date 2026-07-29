@@ -7,7 +7,7 @@ from datetime import datetime
 import streamlit.components.v1 as components
 
 # ==========================================
-# 1. 網頁基本設定 & CSS 樣式
+# 1. 網頁基本設定 & CSS 樣式 (電視全螢幕滿版比例)
 # ==========================================
 st.set_page_config(page_title="SolarEdge Dashboard", layout="wide", initial_sidebar_state="collapsed")
 
@@ -21,12 +21,12 @@ st.markdown("""
     /* 隱藏滑鼠游標 (適用於 Wayland Kiosk 模式) */
     * { cursor: none !important; }
     
-    /* 調整頁面四周留白 */
+    /* 🔴 [佈局調整] 極小化邊緣留白，讓內容盡量向外擴張 */
     .block-container {
-        padding-top: 2rem !important;
-        padding-bottom: 2rem !important;
-        padding-left: 3rem !important;
-        padding-right: 3rem !important;
+        padding-top: 1rem !important;
+        padding-bottom: 1rem !important;
+        padding-left: 2rem !important;
+        padding-right: 2rem !important;
         max-width: 100% !important;
     }
 
@@ -34,19 +34,19 @@ st.markdown("""
     .main-header {
         background-color: #1e213a;
         color: white;
-        padding: 30px; 
+        padding: 40px; 
         text-align: center;
         border-radius: 8px;
-        margin-top: -30px; 
+        margin-top: -60px; 
         margin-bottom: 30px;
         font-family: sans-serif;
     }
     
-    /* 🔴 [電視專用調整] 頂部主標題字體大小 (田心救護站) */
-    .main-header h2 { margin: 0; font-weight: 600; font-size: 4rem; }
+    /* 🔴 [字體放大] 頂部主標題字體大小 (田心救護站) */
+    .main-header h2 { margin: 0; font-weight: 600; font-size: 6rem; }
     
-    /* 🔴 [電視專用調整] 頂部副標題字體大小 (太陽能發電系統) */
-    .main-header span { color: #A0A5B5; font-size: 3.5rem; font-weight: normal; }
+    /* 🔴 [字體放大] 頂部副標題字體大小 (太陽能發電系統) */
+    .main-header span { color: #A0A5B5; font-size: 5rem; font-weight: normal; }
     
     /* 卡片背景與邊框設定 */
     div[data-testid="stVerticalBlock"] > div { background-color: #FFFFFF; }
@@ -54,22 +54,22 @@ st.markdown("""
 
     /* --- 數據顯示區 (Metrics) --- */
     
-    /* 🔴 [電視專用調整] 數據的標題大小 (例如 "今日發電量" 這行字) */
-    /* Streamlit 更新後，需精準指定 data-testid="stMetricLabel" 內的 p 標籤 */
+    /* 🔴 [字體放大] 數據的標題大小 (例如 "今日發電量" 這行字) */
     [data-testid="stMetricLabel"] p {
-        font-size: 1.8rem !important; 
+        font-size: 2.2rem !important; 
         color: #555555 !important;
         font-weight: bold !important;
         white-space: nowrap !important;
     }
 
-    /* 🔴 [電視專用調整] 數據的數值大小 (例如 0.00 kW, 6.76 kWh 的數字) */
+    /* 🔴 [字體放大] 數據的數值大小 (例如 0.00 kW, 6.76 kWh 的數字) */
     [data-testid="stMetricValue"] {
-        font-size: 4.5rem !important; 
+        font-size: 5.5rem !important; 
         color: #00E676 !important; 
         font-weight: bold !important;
-        padding-top: 10px !important;
-        padding-bottom: 10px !important;
+        padding-top: 20px !important;
+        padding-bottom: 20px !important;
+        white-space: nowrap !important;
     }
     
     </style>
@@ -143,8 +143,8 @@ col_left, col_right = st.columns([2.5, 1])
 
 with col_left:
     with st.container(border=True):
-        # 🔴 [電視專用調整] 區塊標題字體大小 ("| 效能")
-        st.markdown("<h2 style='margin-bottom: 10px; font-size: 2.2rem; color: #333;'>| 效能</h2>", unsafe_allow_html=True)
+        # 🔴 [字體放大] 區塊標題字體大小 ("| 效能")
+        st.markdown("<h2 style='margin-bottom: 20px; font-size: 3rem; color: #333;'>| 效能</h2>", unsafe_allow_html=True)
         m1, m2, m3, m4 = st.columns(4)
         m1.metric("⚡ 電流 (目前功率)", current_power)
         m2.metric("📅 今日發電量", today_energy)
@@ -152,22 +152,23 @@ with col_left:
         m4.metric("♾️ 總發電量", lifetime_energy)
 
     with st.container(border=True):
-        # 🔴 [電視專用調整] 區塊標題字體大小 ("| 功率和電量")
-        st.markdown("<h2 style='margin-bottom: 5px; font-size: 2.2rem; color: #333;'>| 功率和電量</h2>", unsafe_allow_html=True)
+        # 🔴 [字體放大] 區塊標題字體大小 ("| 功率和電量")
+        st.markdown("<h2 style='margin-bottom: 5px; font-size: 3rem; color: #333;'>| 功率和電量</h2>", unsafe_allow_html=True)
         
-        # 🔴 [電視專用調整] 圖表上方的附註字體大小
-        st.markdown("<p style='color: #666; font-size: 1.5rem; margin-bottom: 20px;'>今日功率 (kW)</p>", unsafe_allow_html=True)
+        # 🔴 [字體放大] 圖表上方的附註字體大小
+        st.markdown("<p style='color: #666; font-size: 2rem; margin-bottom: 20px;'>今日功率 (kW)</p>", unsafe_allow_html=True)
         
         if not df_chart.empty:
             fig = px.area(df_chart, x="date", y="value", color_discrete_sequence=['#00E676'])
             
-            # 處理夜間數據全為 0 的情況，避免圖表縮放異常（變成一條線）
+            # 處理夜間無數據或逆變器休眠情況 (防止圖表縮成一條線)
             max_value = df_chart['value'].max()
-            y_axis_max = max_value * 1.1 if max_value > 0 else 5.0  # 若最大功率為0(如半夜)，Y軸預設顯示到 5kW
+            y_axis_max = max_value * 1.1 if max_value > 0 else 5.0  
 
             fig.update_layout(
-                margin=dict(l=60, r=40, t=20, b=60), # 增加邊距以容納更大的文字
-                height=650, # 圖表高度
+                margin=dict(l=80, r=50, t=30, b=80), 
+                # 🔴 [消除留白關鍵] 將圖表高度拉長至 850，以填滿螢幕下方空間
+                height=850, 
                 xaxis_title=None,
                 yaxis_title=None,
                 plot_bgcolor='white',
@@ -176,18 +177,18 @@ with col_left:
             
             fig.update_xaxes(
                 showgrid=False,
-                # 🔴 [電視專用調整] X 軸時間文字大小 (時間點)
-                tickfont=dict(size=26, color='#555'),
-                tickformat="%H:%M" # 簡化時間顯示格式
+                # 🔴 [字體放大] X 軸時間文字大小 
+                tickfont=dict(size=32, color='#555'),
+                tickformat="%H:%M" 
             )
             
             fig.update_yaxes(
                 showgrid=True, 
                 gridcolor='#E0E0E0', 
-                gridwidth=1,
-                range=[0, y_axis_max], # 強制 Y 軸從 0 開始，避免半夜無資料時圖形崩潰
-                # 🔴 [電視專用調整] Y 軸數值文字大小 (kW)
-                tickfont=dict(size=28, color='#555')
+                gridwidth=2,
+                range=[0, y_axis_max], 
+                # 🔴 [字體放大] Y 軸數值文字大小
+                tickfont=dict(size=32, color='#555')
             )
             st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
         else:
@@ -195,23 +196,23 @@ with col_left:
 
 with col_right:
     with st.container(border=True):
-        # 🔴 [電視專用調整] 區塊標題字體大小 ("| 環境效益")
-        st.markdown("<h2 style='margin-bottom: 0; font-size: 2.2rem; color: #333;'>| 環境效益</h2>", unsafe_allow_html=True)
+        # 🔴 [字體放大] 區塊標題字體大小 ("| 環境效益")
+        st.markdown("<h2 style='margin-bottom: 0; font-size: 3rem; color: #333;'>| 環境效益</h2>", unsafe_allow_html=True)
         
-        # 🔴 [電視專用調整] 工廠圖示的大小
-        st.markdown("<h1 style='text-align: center; font-size: 14rem; margin-bottom: 40px; margin-top: 60px;'>🏭</h1>", unsafe_allow_html=True)
+        # 🔴 [消除留白關鍵] 大幅增加工廠圖示的大小，並增加 margin-top/bottom 將右側空間撐開，對齊左側 850px 的圖表
+        st.markdown("<h1 style='text-align: center; font-size: 24rem; margin-bottom: 80px; margin-top: 150px;'>🏭</h1>", unsafe_allow_html=True)
         
         st.metric("🌱 節省二氧化碳 (kg)", co2_saved)
         
-        # 填補下方空白對齊左側圖表
-        st.markdown("<br>"*12, unsafe_allow_html=True) 
+        # 底部加入彈性空間以完美貼齊
+        st.markdown("<br>"*5, unsafe_allow_html=True) 
 
 # 底部更新時間
 hkt = pytz.timezone('Asia/Hong_Kong')
 update_time = datetime.now(hkt).strftime("%Y/%m/%d %p %I:%M:%S")
 
-# 🔴 [電視專用調整] 底部更新時間的字體大小
-st.markdown(f"<p style='color: #888888; font-size: 1.4rem; text-align: right; margin-top: 15px;'>🕒 儀表板最後更新: {update_time}</p>", unsafe_allow_html=True)
+# 🔴 [字體放大] 底部更新時間的字體大小
+st.markdown(f"<p style='color: #888888; font-size: 1.8rem; text-align: right; margin-top: 10px;'>🕒 儀表板最後更新: {update_time}</p>", unsafe_allow_html=True)
 
 # 自動重新整理腳本 (5分鐘 = 300000 毫秒)
 components.html(
