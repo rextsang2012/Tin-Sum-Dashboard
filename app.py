@@ -4,7 +4,7 @@ import plotly.express as px
 import requests
 import pytz
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 import streamlit.components.v1 as components
 
 # ==========================================
@@ -77,9 +77,16 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 2. SolarEdge API V2 設定與資料抓取函數
-#    (V1 已於 2026-11 下線：/overview 與 /envBenefits 已移除、
-#     認證改為 HTTP header、路徑改為 /v2/sites/{siteId})
+# 2. SolarEdge API V2 —「省 credit」資料層
+#
+#    ⚠️ V2 為 credit 制：每次 API 呼叫 = 1 credit，免費版每月僅 2,000 credits。
+#    本版策略（約 1,300 credits/月，含安全餘量）：
+#      ① 快資料（今日曲線+目前功率+今日電量）：只用 1 次呼叫
+#         → /energy?resolution=QUARTER_HOUR 一魚三吃（曲線=每格Wh÷0.25h、
+#           今日總量=sum、目前功率=最後一個完整 15 分鐘格）
+#      ② 慢資料（本月+總發電量）：每 12 小時才查 1 輪（2 次呼叫）
+#      ③ 安裝日直接寫死，省掉 site details 呼叫
+#      ④ 夜間（19:00–06:00）不呼叫 API，沿用日間最後數據
 # ==========================================
 try:
     API_KEY = st.secrets["SOLAREDGE_API_KEY"]          # Streamlit Cloud
@@ -88,8 +95,21 @@ except Exception:
 
 SITE_ID = '4873924'
 BASE_URL = f"https://monitoringapi.solaredge.com/v2/sites/{SITE_ID}"
-HEADERS = {"X-API-Key": API_KEY, "Accept": "application/json"}   # V2 用 header，不再用 ?api_key=
+HEADERS = {"X-API-Key": API_KEY, "Accept": "application/json"}
 HKT = pytz.timezone('Asia/Hong_Kong')
+
+# ===== 可調參數（改這裡即可，注意 credit 消耗）=====
+FAST_TTL   = 21 * 60       # 快資料快取秒數（21 分鐘 ≈ 每 20 分鐘 1 次呼叫）
+SLOW_TTL   = 12 * 3600     # 慢資料快取秒數（12 小時）
+DAY_START_HOUR = 6         # 白天抓資料時段（本地時間）
+DAY_END_HOUR   = 19        # 之後為夜間模式：不耗 credit，沿用最後數據
+INSTALL_DATE   = "2026-05-07"   # 田心救護站安裝日（寫死可省 1 credit/次）
+# 消耗估算：白天 13h × 3 次/h + 慢資料 4 次/日 ≈ 43 credits/日 ≈ 1,300/月
+# 若升級付費方案（如 Business Starter $100/月 = 20,000 credits），
+# 可把 FAST_TTL 降為 301（每 5 分鐘）並把 DAY 時段拉長，即時性更好。
+
+# 夜間模式用：保留當日最後一次成功數據（程序重啟後會清空，屆時顯示待機）
+_LAST_GOOD = {}
 
 def format_power(w): return f"{w/1000:.2f} kW" if w is not None else "0.00 kW"
 def format_energy(wh):
@@ -99,70 +119,96 @@ def format_energy(wh):
     else: return f"{wh:.2f} Wh"
 
 def _iso(dt):
-    # V2 要求帶時區的 ISO8601，例如 2026-11-13T00:00:00+08:00
+    # V2 要求帶時區的 ISO8601，例如 2026-11-16T00:00:00+08:00
     return dt.isoformat(timespec="seconds")
 
 def _get(path="", **params):
     r = requests.get(f"{BASE_URL}{path}", headers=HEADERS, params=params, timeout=30)
+    if r.status_code == 429:
+        if "Monthly credit" in r.text:
+            raise RuntimeError(
+                "本月 SolarEdge API 額度已用盡（免費版每月 2,000 credits），"
+                "將於計費週期重置後自動恢復。詳情見 developer.solaredge.com → Settings → Plans。")
+        raise RuntimeError(f"API 速率限制（429），請稍後再試：{r.text[:150]}")
     if r.status_code != 200:
         raise RuntimeError(f"HTTP {r.status_code}: {r.text[:200]}")
     return r.json()
 
-def _sum_energy(start, end, resolution="DAY"):
-    # V2 的 /energy 回傳逐區間數值，要自行加總；「from」是 Python 關鍵字，須用 dict 展開
+def _sum_energy(start, end, resolution):
+    # 「from」是 Python 關鍵字，須用 dict 展開
     d = _get("/energy", **{"from": _iso(start), "to": _iso(end),
                            "resolution": resolution, "unit": "WH"})
     return sum(v["value"] for v in (d.get("values") or []) if v.get("value") is not None)
 
-@st.cache_data(ttl=300)
-def fetch_solaredge_data():
+@st.cache_data(ttl=FAST_TTL)
+def fetch_fast():
+    """快資料：1 次 API 呼叫，同時取回今日曲線 / 今日電量 / 目前功率。"""
     now = datetime.now(HKT)
-    day_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    month_start = day_start.replace(day=1)
-
     data = {"power_df": pd.DataFrame(), "current_power_w": None,
-            "today_wh": 0.0, "month_wh": 0.0, "lifetime_wh": 0.0, "error": None}
+            "today_wh": 0.0, "night": False, "error": None}
     try:
-        # 站點資訊：取安裝日，作為總發電量起算日
-        details = _get()
-        start_raw = str(details.get("installationDate") or "")[:10]
-        life_start = (datetime.fromisoformat(start_raw).replace(tzinfo=HKT)
-                      if start_raw else datetime(2009, 1, 1, tzinfo=HKT))
+        if not (DAY_START_HOUR <= now.hour < DAY_END_HOUR):
+            data["night"] = True            # 夜間：完全不呼叫 API
+            return data
 
-        # 今日功率曲線（15 分鐘區間均值，單位 W）
-        power = _get("/power", **{"from": _iso(day_start), "to": _iso(now),
-                                  "resolution": "QUARTER_HOUR", "unit": "W"})
-        vals = power.get("values") or []
+        day_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        d = _get("/energy", **{"from": _iso(day_start), "to": _iso(now),
+                               "resolution": "QUARTER_HOUR", "unit": "WH"})
+        vals = [v for v in (d.get("values") or []) if v.get("value") is not None]
         if vals:
-            data["current_power_w"] = next(
-                (v["value"] for v in reversed(vals) if v.get("value") is not None), None)
-            df = pd.DataFrame(vals).rename(columns={"timestamp": "date"})
+            data["today_wh"] = sum(v["value"] for v in vals)
+            # 目前功率：用最後一個「完整」的 15 分鐘格（Wh ÷ 0.25h = W）
+            complete = [v for v in vals
+                        if datetime.fromisoformat(v["timestamp"]) <= now - timedelta(minutes=15)]
+            last = complete[-1] if complete else vals[-1]
+            data["current_power_w"] = last["value"] / 0.25
+            # 曲線：每格 15 分鐘平均功率（kW）＝ Wh ÷ 0.25h ÷ 1000
+            df = pd.DataFrame(d.get("values") or []).rename(columns={"timestamp": "date"})
             df["date"] = pd.to_datetime(df["date"])
-            df["value"] = df["value"].fillna(0).astype(float) / 1000.0
+            df["value"] = df["value"].fillna(0).astype(float) / 250.0
             data["power_df"] = df
+    except Exception as e:
+        data["error"] = str(e)
+    return data
 
-        # V2 沒有 /overview，三個發電量分別查詢並加總
-        data["today_wh"] = _sum_energy(day_start, now, "DAY")
+@st.cache_data(ttl=SLOW_TTL)
+def fetch_slow():
+    """慢資料：每 12 小時 2 次呼叫（本月電量 + 總發電量）。"""
+    now = datetime.now(HKT)
+    data = {"month_wh": 0.0, "lifetime_wh": 0.0, "error": None}
+    try:
+        month_start = now.replace(hour=0, minute=0, second=0, microsecond=0, day=1)
+        life_start = datetime.fromisoformat(INSTALL_DATE).replace(tzinfo=HKT)
         data["month_wh"] = _sum_energy(month_start, now, "DAY")
         data["lifetime_wh"] = _sum_energy(life_start, now, "MONTH")
     except Exception as e:
-        data["error"] = str(e)   # 不再靜默吞錯，畫面會顯示原因
+        data["error"] = str(e)
     return data
 
-api_data = fetch_solaredge_data()
-df_chart = api_data["power_df"]
+fast = fetch_fast()
+slow = fetch_slow()
 
-if api_data["error"]:
-    st.error(f"SolarEdge 資料讀取失敗：{api_data['error']}")
+# 夜間模式：沿用當日最後一次成功數據，畫面不會歸零
+today_key = datetime.now(HKT).strftime("%Y-%m-%d")
+if fast["night"] and today_key in _LAST_GOOD:
+    fast = _LAST_GOOD[today_key]
+elif not fast["night"] and fast["error"] is None:
+    _LAST_GOOD[today_key] = fast
 
-current_power    = format_power(api_data["current_power_w"])
-today_energy     = format_energy(api_data["today_wh"])
-month_energy     = format_energy(api_data["month_wh"])
-# 🔴 [修正] 舊版多除了一次 100，導致總發電量少顯示 100 倍
-lifetime_energy  = f"{api_data['lifetime_wh'] / 1_000_000:,.2f} MWh"
+if fast["error"]:
+    st.error(f"SolarEdge 資料讀取失敗：{fast['error']}")
+if slow["error"]:
+    st.warning(f"本月/總發電量暫時無法更新：{slow['error']}")
 
-calc_co2 = (api_data["lifetime_wh"] / 1000) * 0.39
+current_power    = format_power(fast["current_power_w"])
+today_energy     = format_energy(fast["today_wh"])
+month_energy     = format_energy(slow["month_wh"])
+lifetime_energy  = f"{slow['lifetime_wh'] / 1_000_000:,.2f} MWh"
+
+calc_co2 = (slow["lifetime_wh"] / 1000) * 0.39
 co2_saved = f"{calc_co2:,.1f}"
+
+df_chart = fast["power_df"]
 
 # ==========================================
 # 3. 網頁介面排版與繪製
@@ -247,13 +293,13 @@ update_time = datetime.now(HKT).strftime("%Y/%m/%d %p %I:%M:%S")
 # 🔴 [字體放大] 底部更新時間的字體大小
 st.markdown(f"<p style='color: #888888; font-size: 1.8rem; text-align: right; margin-top: 10px;'>🕒 儀表板最後更新: {update_time}</p>", unsafe_allow_html=True)
 
-# 自動重新整理腳本 (5分鐘 = 300000 毫秒)
+# 自動重新整理腳本 — 與 FAST_TTL 對齊：20 分鐘 = 1,200,000 毫秒
 components.html(
     """
     <script>
         setTimeout(function(){
             window.parent.location.reload(1);
-        }, 300000);
+        }, 1200000);
     </script>
     """,
     height=0,
